@@ -38,11 +38,14 @@ export default function Sidebar() {
     let newX = dragStartBtn.current.x + deltaX;
     let newY = dragStartBtn.current.y + deltaY;
     
-    const max_x = window.innerWidth - 70;
+    const screenWidth = window.innerWidth;
     const max_y = window.innerHeight - 80;
     
-    if (newX < 0) newX = 0;
-    if (newX > max_x) newX = max_x;
+    if (newX + 28 < screenWidth / 2) {
+      newX = 16;
+    } else {
+      newX = screenWidth - 56 - 16;
+    }
     if (newY < 0) newY = 0;
     if (newY > max_y) newY = max_y;
     
