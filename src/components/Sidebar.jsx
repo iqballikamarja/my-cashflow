@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Receipt, CirclePlus, WalletCards, Landmark, LogOut, User, Menu, X, ChevronDown, ChevronRight, Tag } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -9,6 +9,55 @@ export default function Sidebar() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   
+  // Dragging logic for mobile menu button
+  const [btnY, setBtnY] = useState(16);
+  const isDragging = useRef(false);
+  const dragStartY = useRef(0);
+  const dragStartBtnY = useRef(0);
+  const dragged = useRef(false);
+
+  const handleTouchStart = (e) => {
+    isDragging.current = true;
+    dragged.current = false;
+    dragStartY.current = e.touches ? e.touches[0].clientY : e.clientY;
+    dragStartBtnY.current = btnY;
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging.current) return;
+    dragged.current = true;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const deltaY = clientY - dragStartY.current;
+    
+    let newY = dragStartBtnY.current + deltaY;
+    const max_y = window.innerHeight - 80;
+    if (newY < 16) newY = 16;
+    if (newY > max_y) newY = max_y;
+    
+    setBtnY(newY);
+  };
+
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      isDragging.current = false;
+    };
+    const handleGlobalMouseMove = (e) => {
+      if (isDragging.current) handleTouchMove(e);
+    };
+    
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    window.addEventListener('mousemove', handleGlobalMouseMove);
+    window.addEventListener('touchend', handleGlobalMouseUp);
+    window.addEventListener('touchmove', handleGlobalMouseMove, { passive: false });
+    
+    return () => {
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+      window.removeEventListener('mousemove', handleGlobalMouseMove);
+      window.removeEventListener('touchend', handleGlobalMouseUp);
+      window.removeEventListener('touchmove', handleGlobalMouseMove);
+    };
+  }, [btnY]);
+
   const [openMenus, setOpenMenus] = useState({
     overview: false,
     riwayat: false,
@@ -153,8 +202,28 @@ export default function Sidebar() {
 
   return (
     <>
-      <button className="mobile-menu-btn" onClick={() => setMobileOpen(true)}>
-        <Menu size={24} />
+      <button 
+        className="mobile-menu-btn" 
+        onClick={() => {
+          if (!dragged.current) setMobileOpen(true);
+        }}
+        onMouseDown={handleTouchStart}
+        onTouchStart={handleTouchStart}
+        style={{ 
+          top: `${btnY}px`,
+          position: 'fixed',
+          borderRadius: '50%',
+          width: '56px',
+          height: '56px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 8px 16px rgba(0,0,0,0.15)',
+          touchAction: 'none',
+          zIndex: 999
+        }}
+      >
+        <Menu size={28} />
       </button>
 
       {mobileOpen && <div className="sidebar-overlay" onClick={closeMobile} />}
