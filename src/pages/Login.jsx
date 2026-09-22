@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { WalletCards, LogIn, UserPlus } from 'lucide-react';
@@ -49,8 +49,8 @@ export default function Login() {
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: 'var(--bg-default)' }}>
       <div className="card" style={{ width: '100%', maxWidth: '400px', padding: '2rem' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem' }}>
-          <WalletCards size={48} color="var(--accent-primary)" style={{ marginBottom: '1rem' }} />
-          <h1 className="text-h1" style={{ margin: 0 }}>CashFlow</h1>
+          <img src="/logo.jpg" alt="Logo" style={{ width: "64px", height: "64px", marginBottom: "1rem", borderRadius: "16px" }} />
+          <h1 className="text-h1" style={{ margin: 0 }}>My Cashflow</h1>
           <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
             {isLogin ? 'Masuk ke dashboard keuanganmu' : 'Daftar akun baru'}
           </p>
