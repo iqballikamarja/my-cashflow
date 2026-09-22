@@ -37,8 +37,8 @@ export default function Sidebar() {
     <>
       <div>
         <div className="sidebar-logo">
-          <WalletCards size={28} />
-          <span>CashFlow</span>
+          <img src="/logo.jpg" alt="Logo" style={{ width: "32px", height: "32px", borderRadius: "8px" }} />
+          <span>My Cashflow</span>
           <button className="mobile-close-btn" onClick={closeMobile} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'none' }}>
             <X size={24} />
           </button>
