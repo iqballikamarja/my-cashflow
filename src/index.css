@@ -493,10 +493,10 @@ tbody tr:hover td {
 
 @media (max-width: 768px) {
   .sticky-header {
-    margin-top: -4rem;
+    margin-top: -1rem;
     margin-left: -1rem;
     margin-right: -1rem;
-    padding: 4rem 1rem 1rem 1rem;
+    padding: 1rem;
   }
 }
 
