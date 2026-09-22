@@ -10,31 +10,43 @@ export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   
   // Dragging logic for mobile menu button
-  const [btnY, setBtnY] = useState(16);
+  const [btnPos, setBtnPos] = useState({ x: 16, y: 16 });
   const isDragging = useRef(false);
-  const dragStartY = useRef(0);
-  const dragStartBtnY = useRef(0);
+  const dragStart = useRef({ x: 0, y: 0 });
+  const dragStartBtn = useRef({ x: 0, y: 0 });
   const dragged = useRef(false);
 
   const handleTouchStart = (e) => {
     isDragging.current = true;
     dragged.current = false;
-    dragStartY.current = e.touches ? e.touches[0].clientY : e.clientY;
-    dragStartBtnY.current = btnY;
+    dragStart.current = {
+      x: e.touches ? e.touches[0].clientX : e.clientX,
+      y: e.touches ? e.touches[0].clientY : e.clientY
+    };
+    dragStartBtn.current = { ...btnPos };
   };
 
   const handleTouchMove = (e) => {
     if (!isDragging.current) return;
     dragged.current = true;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    const deltaY = clientY - dragStartY.current;
     
-    let newY = dragStartBtnY.current + deltaY;
+    const deltaX = clientX - dragStart.current.x;
+    const deltaY = clientY - dragStart.current.y;
+    
+    let newX = dragStartBtn.current.x + deltaX;
+    let newY = dragStartBtn.current.y + deltaY;
+    
+    const max_x = window.innerWidth - 70;
     const max_y = window.innerHeight - 80;
-    if (newY < 16) newY = 16;
+    
+    if (newX < 0) newX = 0;
+    if (newX > max_x) newX = max_x;
+    if (newY < 0) newY = 0;
     if (newY > max_y) newY = max_y;
     
-    setBtnY(newY);
+    setBtnPos({ x: newX, y: newY });
   };
 
   useEffect(() => {
@@ -56,7 +68,7 @@ export default function Sidebar() {
       window.removeEventListener('touchend', handleGlobalMouseUp);
       window.removeEventListener('touchmove', handleGlobalMouseMove);
     };
-  }, [btnY]);
+  }, [btnPos]);
 
   const [openMenus, setOpenMenus] = useState({
     overview: false,
@@ -205,12 +217,13 @@ export default function Sidebar() {
       <button 
         className="mobile-menu-btn" 
         onClick={() => {
-          if (!dragged.current) setMobileOpen(true);
+          if (!dragged.current) setMobileOpen(!mobileOpen);
         }}
         onMouseDown={handleTouchStart}
         onTouchStart={handleTouchStart}
         style={{ 
-          top: `${btnY}px`,
+          top: `${btnPos.y}px`,
+          left: `${btnPos.x}px`,
           position: 'fixed',
           borderRadius: '50%',
           width: '56px',
@@ -220,7 +233,10 @@ export default function Sidebar() {
           justifyContent: 'center',
           boxShadow: '0 8px 16px rgba(0,0,0,0.15)',
           touchAction: 'none',
-          zIndex: 999
+          zIndex: 999,
+          background: 'var(--accent-primary)',
+          color: 'white',
+          border: 'none'
         }}
       >
         <Menu size={28} />
