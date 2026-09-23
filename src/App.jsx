@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
@@ -7,6 +7,7 @@ import Transactions from './pages/Transactions';
 import AddTransaction from './pages/AddTransaction';
 import Accounts from './pages/Accounts';
 import Categories from './pages/Categories';
+import Users from './pages/Users';
 import Login from './pages/Login';
 import './index.css';
 
@@ -39,6 +40,7 @@ function App() {
           <Route path="/add" element={<ProtectedRoute><AddTransaction /></ProtectedRoute>} />
           <Route path="/accounts" element={<ProtectedRoute><Accounts /></ProtectedRoute>} />
           <Route path="/categories" element={<ProtectedRoute><Categories /></ProtectedRoute>} />
+          <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
         </Routes>
       </Router>
     </AuthProvider>
