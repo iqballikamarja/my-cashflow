@@ -1,4 +1,4 @@
-﻿const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
 const transactionSchema = new mongoose.Schema({
   transactionId: {
@@ -44,9 +44,11 @@ const transactionSchema = new mongoose.Schema({
     type: String,
     default: 'Web Dashboard'
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
+  createdAt: { type: Date, default: Date.now },
+  isDeleted: { type: Boolean, default: false },
+  isDeleted: {
+    type: Boolean,
+    default: false
   }
 });
 
