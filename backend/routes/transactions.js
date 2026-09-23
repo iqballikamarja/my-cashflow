@@ -7,7 +7,7 @@ router.use(authMiddleware);
 
 router.get('/', async (req, res) => {
   try {
-    const filter = {};
+    const filter = { isDeleted: { $ne: true } };
     if (req.query.user) {
       filter.user = { $regex: new RegExp('^' + req.query.user + '$', 'i') };
     }
@@ -30,7 +30,7 @@ router.get('/', async (req, res) => {
 
 router.get('/stats', async (req, res) => {
   try {
-    const filter = {};
+    const filter = { isDeleted: { $ne: true } };
     if (req.query.user) {
       filter.user = { $regex: new RegExp('^' + req.query.user + '$', 'i') };
     }
@@ -128,6 +128,16 @@ router.get('/balances', async (req, res) => {
   }
 });
 
+router.get('/export', async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ message: 'Akses Ditolak' });
+  try {
+    const transactions = await Transaction.find().sort({ date: -1, createdAt: -1 });
+    res.json(transactions);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 router.post('/', async (req, res) => {
   try {
     const newTx = new Transaction({ ...req.body, user: req.user.username });
@@ -159,7 +169,7 @@ router.delete('/:id', async (req, res) => {
     if (req.user.role !== 'admin' && tx.user !== req.user.username) {
       return res.status(403).json({ message: 'Forbidden' });
     }
-    await Transaction.findByIdAndDelete(req.params.id);
+    await Transaction.findByIdAndUpdate(req.params.id, { isDeleted: true });
     res.json({ message: 'Deleted' });
   } catch (err) {
     res.status(500).json({ message: err.message });
