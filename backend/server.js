@@ -12,15 +12,16 @@ const PORT = process.env.PORT || 5000;
 const allowedOrigins = ['https://my-cashflow.vercel.app', 'http://localhost:5173'];
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error('Not allowed by CORS: ' + origin));
     }
   },
   credentials: true
 }));
 app.use(express.json());
+app.set('trust proxy', 1);
 
 // Routes
 const { router: authRoutes } = require('./routes/auth');
