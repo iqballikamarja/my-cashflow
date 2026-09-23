@@ -139,7 +139,7 @@ export default function Accounts() {
             )}
             <div className="grid-cols-3">
               {/* Total Saldo Card */}
-              <div className="account-card" style={{ background: '#111827', color: '#fff', position: 'relative' }}>
+              <div className="account-card" style={account.name.toLowerCase().includes('shopee') ? { background: '#ee4d2d', color: '#fff', position: 'relative' } : { background: '#111827', color: '#fff', position: 'relative' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                   <Landmark size={40} />
                   <span style={{ fontSize: '0.85rem', opacity: 0.9, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>TOTAL SALDO</span>
