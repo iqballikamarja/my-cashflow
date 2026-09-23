@@ -111,8 +111,10 @@ export default function Sidebar() {
   }, [user]);
 
   const handleLogout = () => {
-    logout();
-    navigate('/login');
+    if (window.confirm('Yakin ingin keluar dari akun?')) {
+      logout();
+      navigate('/login');
+    }
   };
 
   const searchParams = new URLSearchParams(location.search);
