@@ -205,21 +205,6 @@ export default function Sidebar() {
           
           
           
-          {user?.role === 'admin' && (
-            <div className="nav-item-wrapper">
-              <NavLink to="/users" onClick={closeMobile} className={({ isActive }) => 'nav-link ' + (location.pathname === '/users' ? 'active' : '')}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
-                  <UsersIcon size={20} /><span>User Management</span>
-                </div>
-                {pendingCount > 0 && (
-                  <span style={{ background: 'var(--accent-danger)', color: 'white', fontSize: '0.7rem', fontWeight: 'bold', padding: '2px 6px', borderRadius: '999px' }}>
-                    {pendingCount}
-                  </span>
-                )}
-              </NavLink>
-            </div>
-          )}
-          
           <div className="nav-item-wrapper">
             <NavLink to="/categories" onClick={user?.role !== 'admin' ? closeMobile : undefined} className={({ isActive }) => 'nav-link ' + (location.pathname === '/categories' && currentType === '' ? 'active' : '')}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
@@ -236,6 +221,21 @@ export default function Sidebar() {
               </div>
             )}
           </div>
+
+          {user?.role === 'admin' && (
+            <div className="nav-item-wrapper">
+              <NavLink to="/users" onClick={closeMobile} className={({ isActive }) => 'nav-link ' + (location.pathname === '/users' ? 'active' : '')}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
+                  <UsersIcon size={20} /><span>User Management</span>
+                </div>
+                {pendingCount > 0 && (
+                  <span style={{ background: 'var(--accent-danger)', color: 'white', fontSize: '0.7rem', fontWeight: 'bold', padding: '2px 6px', borderRadius: '999px' }}>
+                    {pendingCount}
+                  </span>
+                )}
+              </NavLink>
+            </div>
+          )}
 
         </nav>
       </div>
