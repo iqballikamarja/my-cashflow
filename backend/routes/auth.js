@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -44,7 +44,7 @@ router.post('/login', async (req, res) => {
     // Normalize username (Iqbal, Zela)
     const normUser = user.username === 'admin' ? 'admin' : user.username.charAt(0).toUpperCase() + user.username.slice(1).toLowerCase();
 
-    const token = jwt.sign({ id: user._id, username: normUser, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user._id, username: normUser, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
     res.json({ token, user: { id: user._id, username: normUser, role: user.role } });
   } catch (err) {
     res.status(500).json({ message: err.message });
