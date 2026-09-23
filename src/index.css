@@ -510,3 +510,10 @@ tbody tr:hover td {
     padding-top: 1rem;
   }
 }
+
+
+@media (min-width: 769px) {
+  .mobile-menu-btn {
+    display: none !important;
+  }
+}
