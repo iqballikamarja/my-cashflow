@@ -17,7 +17,9 @@ const BANK_COLORS = {
   DANA: { bg: '#118EEA', text: '#fff' },
   LINKAJA: { bg: '#E3000F', text: '#fff' },
   SEABANK: { bg: '#FF6D00', text: '#fff' },
-  JAGO: { bg: '#F78100', text: '#fff' }
+  JAGO: { bg: '#F78100', text: '#fff' },
+  SHOPEE: { bg: '#ee4d2d', text: '#fff' },
+  SHOPEEPAY: { bg: '#ee4d2d', text: '#fff' }
 };
 
 function getBankStyle(name) {
