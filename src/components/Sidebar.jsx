@@ -11,6 +11,23 @@ export default function Sidebar() {
   
   // Dragging logic for mobile menu button
   const [btnPos, setBtnPos] = useState({ x: 16, y: 16 });
+  const [isDimmed, setIsDimmed] = useState(false);
+  const dimTimer = useRef(null);
+
+  const resetDimTimer = () => {
+    setIsDimmed(false);
+    if (dimTimer.current) clearTimeout(dimTimer.current);
+    dimTimer.current = setTimeout(() => {
+      setIsDimmed(true);
+    }, 5000);
+  };
+
+  useEffect(() => {
+    resetDimTimer();
+    return () => {
+      if (dimTimer.current) clearTimeout(dimTimer.current);
+    };
+  }, []);
   const isDragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const dragStartBtn = useRef({ x: 0, y: 0 });
@@ -19,6 +36,7 @@ export default function Sidebar() {
   const handleTouchStart = (e) => {
     isDragging.current = true;
     dragged.current = false;
+    resetDimTimer();
     dragStart.current = {
       x: e.touches ? e.touches[0].clientX : e.clientX,
       y: e.touches ? e.touches[0].clientY : e.clientY
@@ -29,6 +47,7 @@ export default function Sidebar() {
   const handleTouchMove = (e) => {
     if (!isDragging.current) return;
     dragged.current = true;
+    resetDimTimer();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     
@@ -239,7 +258,9 @@ export default function Sidebar() {
           zIndex: 999,
           background: 'var(--accent-primary)',
           color: 'white',
-          border: 'none'
+          border: 'none',
+          opacity: isDimmed ? 0.4 : 1,
+          transition: 'left 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.5s ease'
         }}
       >
         <Menu size={28} />
