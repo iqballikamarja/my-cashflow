@@ -91,7 +91,7 @@ router.get('/stats', async (req, res) => {
 
 router.get('/balances', async (req, res) => {
   try {
-    const transactions = await Transaction.find();
+    const transactions = await Transaction.find({ isDeleted: { $ne: true } });
     const balances = {};
 
     transactions.forEach(t => {
