@@ -82,13 +82,14 @@ export default function AddTransaction() {
     setLoading(false);
   };
 
-  const otherUsersAccounts = [];
+    const groupedAccounts = {};
+  let otherAccountsCount = 0;
   for (const [u, accs] of Object.entries(allAccounts)) {
-    accs.forEach(a => {
-      if (u !== myUsername || a !== form.account) {
-        otherUsersAccounts.push(u + '-' + a);
-      }
-    });
+    const validAccs = accs.filter(a => !(u.toLowerCase() === myUsername && a === form.account));
+    if (validAccs.length > 0) {
+      groupedAccounts[u] = validAccs;
+      otherAccountsCount += validAccs.length;
+    }
   }
 
   return (
@@ -138,14 +139,18 @@ export default function AddTransaction() {
           {form.type === 'TRANSFER' && (
             <div className="form-group">
               <label className="form-label"><Wallet size={16} /> Tujuan Transfer</label>
-              <select className="form-input" value={form.toAccount}
-                onChange={e => handleChange('toAccount', e.target.value)} required>
-                <option value="">-- Pilih Tujuan --</option>
-                {otherUsersAccounts.map(acc => (
-                  <option key={acc} value={acc}>{acc.replace('-', ' - ')}</option>
-                ))}
-              </select>
-              {otherUsersAccounts.length === 0 && (
+                              <select className="form-input" style={{ fontWeight: 500 }} value={form.toAccount}
+                  onChange={e => handleChange('toAccount', e.target.value)} required>
+                  <option value="">-- Pilih Tujuan --</option>
+                  {Object.entries(groupedAccounts).map(([u, accs]) => (
+                    <optgroup key={u} label={u.toLowerCase() === 'iqbal' ? '👨 Iqbal' : u.toLowerCase() === 'zela' ? '👩 Zela' : `👤 ${u.charAt(0).toUpperCase() + u.slice(1)}`}>
+                      {accs.map(a => (
+                        <option key={`${u}-${a}`} value={`${u}-${a}`}>{a}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+                {otherAccountsCount === 0 && (
                 <p style={{ fontSize: '0.8rem', color: 'var(--accent-danger)', margin: '0.25rem 0 0' }}>
                   Belum ada rekening tujuan. Tambahkan rekening di menu Rekening terlebih dahulu.
                 </p>
