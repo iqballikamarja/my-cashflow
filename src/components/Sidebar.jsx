@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Receipt, CirclePlus, WalletCards, Landmark, LogOut, User, Menu, X, ChevronDown, ChevronRight, Tag } from 'lucide-react';
+import { LayoutDashboard, Receipt, CirclePlus, WalletCards, Landmark, LogOut, User, Menu, X, ChevronDown, ChevronRight, Tag, Shield, Users as UsersIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config';
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
@@ -92,12 +93,22 @@ export default function Sidebar() {
     };
   }, [btnPos]);
 
-  const [openMenus, setOpenMenus] = useState({
+    const [openMenus, setOpenMenus] = useState({
     overview: false,
     riwayat: false,
     rekening: false,
     kategori: false
   });
+  
+  const [pendingCount, setPendingCount] = useState(0);
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      fetch(`${API_URL}/api/users/pending-count`)
+        .then(res => res.json())
+        .then(data => setPendingCount(data.count))
+        .catch(err => console.error(err));
+    }
+  }, [user]);
 
   const handleLogout = () => {
     logout();
@@ -193,6 +204,22 @@ export default function Sidebar() {
           </div>
           
           
+          
+          {user?.role === 'admin' && (
+            <div className="nav-item-wrapper">
+              <NavLink to="/users" onClick={closeMobile} className={({ isActive }) => 'nav-link ' + (location.pathname === '/users' ? 'active' : '')}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
+                  <UsersIcon size={20} /><span>User Management</span>
+                </div>
+                {pendingCount > 0 && (
+                  <span style={{ background: 'var(--accent-danger)', color: 'white', fontSize: '0.7rem', fontWeight: 'bold', padding: '2px 6px', borderRadius: '999px' }}>
+                    {pendingCount}
+                  </span>
+                )}
+              </NavLink>
+            </div>
+          )}
+          
           <div className="nav-item-wrapper">
             <NavLink to="/categories" onClick={user?.role !== 'admin' ? closeMobile : undefined} className={({ isActive }) => 'nav-link ' + (location.pathname === '/categories' && currentType === '' ? 'active' : '')}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
@@ -215,8 +242,14 @@ export default function Sidebar() {
 
       <div style={{ marginTop: 'auto', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 1rem', marginBottom: '0.5rem' }}>
-          <div style={{ background: 'var(--bg-default)', padding: '0.5rem', borderRadius: '50%', color: 'var(--text-secondary)' }}>
-            <User size={20} />
+          <div style={{ background: 'var(--bg-default)', padding: '0.5rem', borderRadius: '50%', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px' }}>
+            {user?.role === 'admin' ? (
+              <Shield size={20} color="#eab308" />
+            ) : (
+              <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color: 'var(--accent-primary)' }}>
+                {user?.username?.charAt(0).toUpperCase() || 'U'}
+              </div>
+            )}
           </div>
           <div>
             <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', textTransform: 'capitalize' }}>
@@ -248,8 +281,8 @@ export default function Sidebar() {
           left: `${btnPos.x}px`,
           position: 'fixed',
           borderRadius: '50%',
-          width: '56px',
-          height: '56px',
+          width: '48px',
+          height: '48px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -260,10 +293,11 @@ export default function Sidebar() {
           color: 'white',
           border: 'none',
           opacity: isDimmed ? 0.4 : 1,
-          transition: 'left 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.5s ease'
+          transform: isDimmed ? (btnPos.x < window.innerWidth / 2 ? 'translateX(-50%)' : 'translateX(50%)') : 'translateX(0)',
+          transition: 'left 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform 0.4s ease, opacity 0.5s ease'
         }}
       >
-        <Menu size={28} />
+        <Menu size={24} />
       </button>
 
       {mobileOpen && <div className="sidebar-overlay" onClick={closeMobile} />}
