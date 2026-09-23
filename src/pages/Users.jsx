@@ -79,7 +79,7 @@ export default function Users() {
       </div>
 
       <div className="card" style={{ marginTop: '1rem', overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '500px' }}>
           <thead>
             <tr>
               <th>USERNAME</th>
@@ -99,17 +99,17 @@ export default function Users() {
                   </span>
                 </td>
                 <td>
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                     {u.status === 'pending' && (
-                      <button onClick={() => updateStatus(u._id, 'approved')} className="btn-primary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', gap: '4px' }}>
+                      <button onClick={() => updateStatus(u._id, 'approved')} style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', background: '#ecfdf5', color: '#059669', border: '1px solid #10b981', borderRadius: '99px', cursor: 'pointer', transition: 'all 0.2s' }}>
                         <Check size={14} /> Approve
                       </button>
                     )}
-                    <button onClick={() => resetPassword(u._id, u.username)} className="btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', gap: '4px' }}>
-                      <Key size={14} /> Reset Pass
+                    <button onClick={() => resetPassword(u._id, u.username)} style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', background: '#eff6ff', color: '#2563eb', border: '1px solid #3b82f6', borderRadius: '99px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                        <Key size={14} /> Reset Pass
                     </button>
                     {u.username !== 'admin' && (
-                      <button onClick={() => deleteUser(u._id, u.username)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', gap: '4px', background: 'var(--accent-danger)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                      <button onClick={() => deleteUser(u._id, u.username)} style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', background: '#fef2f2', color: '#dc2626', border: '1px solid #ef4444', borderRadius: '99px', cursor: 'pointer', transition: 'all 0.2s' }}>
                         <Trash2 size={14} /> Hapus
                       </button>
                     )}
