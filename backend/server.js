@@ -16,11 +16,13 @@ const { router: authRoutes } = require('./routes/auth');
 const transactionRoutes = require('./routes/transactions');
 const accountRoutes = require('./routes/accounts');
 const categoryRoutes = require('./routes/categories');
+const userRoutes = require('./routes/users');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/accounts', accountRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/users', userRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
