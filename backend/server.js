@@ -23,6 +23,28 @@ app.use(cors({
 app.use(express.json());
 app.set('trust proxy', 1);
 
+
+// MongoDB Connection Middleware for Vercel Serverless
+let cachedDb = null;
+async function connectToDatabase() {
+  if (cachedDb && mongoose.connection.readyState === 1) return cachedDb;
+  if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI is not set');
+  console.log('Connecting to MongoDB...');
+  cachedDb = await mongoose.connect(process.env.MONGODB_URI);
+  console.log('Connected to MongoDB');
+  return cachedDb;
+}
+
+app.use(async (req, res, next) => {
+  try {
+    await connectToDatabase();
+    next();
+  } catch (err) {
+    console.error('Database error:', err);
+    res.status(500).json({ message: 'Database connection failed' });
+  }
+});
+
 // Routes
 const { router: authRoutes } = require('./routes/auth');
 const transactionRoutes = require('./routes/transactions');
@@ -49,13 +71,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // MongoDB Connection
-if (process.env.MONGODB_URI) {
-  mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('✅ Connected to MongoDB'))
-    .catch(err => console.error('❌ MongoDB connection error:', err));
-} else {
-  console.log('⚠️ MONGODB_URI is not set in .env file.');
-}
+
 
 app.listen(PORT, () => {
   console.log('🚀 Server running on http://localhost:' + PORT);
