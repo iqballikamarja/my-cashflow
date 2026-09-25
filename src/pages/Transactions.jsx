@@ -317,7 +317,7 @@ export default function Transactions() {
 
           <h1 className="text-h1" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: 0 }}>
 
-            <Receipt size={28} /> Riwayat Transaksi
+            <Receipt size={28} /> Riwayat
 
           </h1>
 
@@ -326,7 +326,7 @@ export default function Transactions() {
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
 
             <div className="btn-group">
-                <button onClick={() => setShowPeriodModal(true)} className={`btn-toggle active`}>
+                <button onClick={() => setShowPeriodModal(true)} className={`btn-toggle active`} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Calendar size={16} /> Pilih Periode
                 </button>
               </div>
