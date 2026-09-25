@@ -880,10 +880,8 @@ export default function Dashboard() {
 
             <div className="btn-group">
 
-              <button onClick={() => setShowPeriodModal(true)} className={`btn-toggle active`}>
-
+              <button onClick={() => setShowPeriodModal(true)} className={`btn-toggle active`} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Calendar size={16} /> Pilih Periode
-
               </button>
 
             </div>
