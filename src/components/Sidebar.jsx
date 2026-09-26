@@ -102,13 +102,22 @@ export default function Sidebar() {
   
   const [pendingCount, setPendingCount] = useState(0);
   useEffect(() => {
-    if (user?.role === 'admin') {
-      fetch(`${API_URL}/api/users/pending-count`)
-        .then(res => res.json())
-        .then(data => setPendingCount(data.count))
-        .catch(err => console.error(err));
-    }
-  }, [user]);
+    const fetchPending = () => {
+      if (user?.role === 'admin') {
+        fetch(`${API_URL}/api/users/pending-count`)
+          .then(res => res.json())
+          .then(data => setPendingCount(data.count))
+          .catch(err => console.error(err));
+      }
+    };
+    fetchPending();
+    window.addEventListener('usersUpdated', fetchPending);
+    const interval = setInterval(fetchPending, 15000);
+    return () => {
+      window.removeEventListener('usersUpdated', fetchPending);
+      clearInterval(interval);
+    };
+  }, [user, location.pathname]);
 
   const handleLogout = () => {
     if (window.confirm('Yakin ingin keluar dari akun?')) {
