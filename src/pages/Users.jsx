@@ -14,6 +14,7 @@ export default function Users() {
       if (res.ok) {
         const data = await res.json();
         setUsersList(data);
+        window.dispatchEvent(new Event('usersUpdated'));
       }
     } catch (err) {
       console.error(err);
