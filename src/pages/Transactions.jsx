@@ -231,7 +231,7 @@ export default function Transactions() {
 
 
 
-  const categories = editForm?.type === 'TRANSFER' ? [] : allCategories.filter(c => c.type === editForm?.type).map(c => c.name);
+  const categories = editForm?.type === 'TRANSFER' ? [] : (editForm?.type === 'IN' ? CATEGORIES_IN : CATEGORIES_OUT);
 
   const txOwner = editTx?.user || user.username;
 
