@@ -55,8 +55,8 @@ export default function Accounts() {
       const balData = await balRes.json();
       const accData = await accRes.json();
       
-      setBalances(balData);
-      setAccountsList(accData);
+      setBalances(balData.message ? {} : balData);
+      setAccountsList(Array.isArray(accData) ? accData : []);
     } catch (err) {}
     setLoading(false);
   };
