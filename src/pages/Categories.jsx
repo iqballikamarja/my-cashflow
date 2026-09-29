@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { useLocation } from 'react-router-dom';
 import { API_URL } from '../config';
 
-
 export default function Categories() {
   const { user } = useAuth();
   const token = localStorage.getItem('token');
@@ -92,8 +91,6 @@ export default function Categories() {
     }
   };
 
-  const typeLabels = { 'OUT': 'Pengeluaran', 'IN': 'Pemasukan', 'TRANSFER': 'Transfer' };
-
   if (loading) {
     return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Memuat data kategori...</div>;
   }
@@ -120,56 +117,59 @@ export default function Categories() {
         </button>
       </div>
 
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
+      <div className="card" style={{ marginTop: '0', overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '500px' }}>
           <thead>
-            <tr style={{ background: 'var(--bg-default)', borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
-              {user?.role === 'admin' && displayUser === 'Semua' && <th style={{ padding: '1rem 1.25rem' }}>USER</th>}
-              <th style={{ padding: '1rem 1.25rem' }}>JENIS</th>
-              <th style={{ padding: '1rem 1.25rem' }}>NAMA KATEGORI</th>
-              <th style={{ padding: '1rem 1.25rem', textAlign: 'center' }}>AKSI</th>
+            <tr>
+              <th>KATEGORI</th>
+              <th>JENIS</th>
+              {user?.role === 'admin' && displayUser === 'Semua' && <th>USER</th>}
+              <th style={{ width: '100px' }}>ACTION</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map(cat => (
-              <tr key={cat._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                {user?.role === 'admin' && displayUser === 'Semua' && (
-                  <td style={{ padding: '1rem 1.25rem' }}>
-                    <span style={{ 
-                      padding: '0.25rem 0.75rem', 
-                      borderRadius: '999px', 
-                      fontSize: '0.75rem', 
-                      fontWeight: 600,
-                      background: cat.user.toLowerCase() === 'iqbal' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(236, 72, 153, 0.1)',
-                      color: cat.user.toLowerCase() === 'iqbal' ? '#3b82f6' : '#ec4899'
-                    }}>
-                      {cat.user}
-                    </span>
-                  </td>
-                )}
-                <td style={{ padding: '1rem 1.25rem' }}>
+              <tr key={cat._id}>
+                <td>
+                  <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text-primary)' }}>{cat.name}</div>
+                </td>
+                <td>
                   <span style={{ 
-                    padding: '0.25rem 0.75rem', 
-                    borderRadius: '999px', 
-                    fontSize: '0.75rem', 
-                    fontWeight: 600,
-                    background: cat.type === 'IN' ? 'rgba(16, 185, 129, 0.1)' : cat.type === 'OUT' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(59, 130, 246, 0.1)',
-                    color: cat.type === 'IN' ? '#10b981' : cat.type === 'OUT' ? '#ef4444' : '#3b82f6'
+                    padding: '6px 12px', 
+                    borderRadius: '99px', 
+                    fontSize: '11px', 
+                    fontWeight: 700, 
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    background: cat.type === 'IN' ? '#d1fae5' : cat.type === 'OUT' ? '#fee2e2' : '#eff6ff', 
+                    color: cat.type === 'IN' ? '#059669' : cat.type === 'OUT' ? '#dc2626' : '#2563eb', 
+                    display: 'inline-block' 
                   }}>
-                    {typeLabels[cat.type]}
+                    {cat.type === 'IN' ? 'Pemasukan' : cat.type === 'OUT' ? 'Pengeluaran' : 'Lainnya'}
                   </span>
                 </td>
-                <td style={{ padding: '1rem 1.25rem', fontWeight: 500 }}>{cat.name}</td>
-                <td style={{ padding: '1rem 1.25rem', textAlign: 'center' }}>
-                  <button onClick={() => handleDelete(cat._id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent-danger)' }} title="Hapus">
-                    <Trash2 size={18} />
+                
+                {user?.role === 'admin' && displayUser === 'Semua' && (
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ width: 28, height: 28, borderRadius: '50%', background: cat.user.toLowerCase() === 'iqbal' ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' : 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                        {cat.user[0].toUpperCase()}
+                      </div>
+                      <div style={{ fontWeight: 600, fontSize: '13px' }}>{cat.user}</div>
+                    </div>
+                  </td>
+                )}
+                
+                <td>
+                  <button onClick={() => handleDelete(cat._id)} style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', background: '#fef2f2', color: '#dc2626', border: '1px solid #ef4444', borderRadius: '99px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                    <Trash2 size={14} /> Hapus
                   </button>
                 </td>
               </tr>
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={user?.role === 'admin' && displayUser === 'Semua' ? 4 : 3} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                <td colSpan={user?.role === 'admin' && displayUser === 'Semua' ? 4 : 3} style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
                   Belum ada kategori yang dibuat.
                 </td>
               </tr>
@@ -203,7 +203,13 @@ export default function Categories() {
                 </div>
               )}
               
-
+              <div className="form-group">
+                <label className="form-label">Jenis Kategori</label>
+                <select className="form-input" value={newCat.type} onChange={(e) => setNewCat({ ...newCat, type: e.target.value })}>
+                  <option value="OUT">Pengeluaran</option>
+                  <option value="IN">Pemasukan</option>
+                </select>
+              </div>
 
               <div className="form-group">
                 <label className="form-label">Nama Kategori</label>
