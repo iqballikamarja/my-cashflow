@@ -1,14 +1,23 @@
 const express = require('express');
+
 const mongoose = require('mongoose');
+
 const cors = require('cors');
+
 const path = require('path');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
+
+
 const app = express();
+
 const PORT = process.env.PORT || 5000;
 
+
+
 // Middleware
+
 const allowedOrigins = ['https://my-cashflow.vercel.app', 'http://localhost:5173'];
 app.use(cors({
   origin: function (origin, callback) {
@@ -20,8 +29,11 @@ app.use(cors({
   },
   credentials: true
 }));
+
 app.use(express.json());
 app.set('trust proxy', 1);
+
+
 
 
 // MongoDB Connection Middleware for Vercel Serverless
@@ -46,11 +58,18 @@ app.use(async (req, res, next) => {
 });
 
 // Routes
+
 const { router: authRoutes } = require('./routes/auth');
+
 const transactionRoutes = require('./routes/transactions');
+
 const accountRoutes = require('./routes/accounts');
+
 const categoryRoutes = require('./routes/categories');
 const userRoutes = require('./routes/users');
+const goalRoutes = require('./routes/goals');
+
+
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -59,22 +78,42 @@ const loginLimiter = rateLimit({
 });
 app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth', authRoutes);
+
 app.use('/api/transactions', transactionRoutes);
+
 app.use('/api/accounts', accountRoutes);
+
 app.use('/api/categories', categoryRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/goals', goalRoutes);
+
+
 
 // Health check
+
 app.get('/api/health', (req, res) => {
+
   const dbStatus = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected';
+
   res.json({ status: 'OK', database: dbStatus });
+
 });
+
+
 
 // MongoDB Connection
 
 
+
+
+
 app.listen(PORT, () => {
+
   console.log('🚀 Server running on http://localhost:' + PORT);
+
 });
 
+
+
 module.exports = app;
+
