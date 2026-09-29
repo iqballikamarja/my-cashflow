@@ -361,22 +361,24 @@ export default function Transactions() {
       ) : (
 <>
 <div className="card custom-scroll" style={{ padding: 0, overflowY: 'auto', overflowX: 'auto', maxHeight: 'calc(100vh - 180px)' }}>
-<div style={{ padding: '1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ flex: 1, minWidth: '200px', display: 'flex', alignItems: 'center', background: 'var(--bg-default)', borderRadius: '8px', padding: '0.5rem 1rem', border: '1px solid var(--border-color)' }}>
+<div style={{ padding: '1rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ flex: '1 1 100%', display: 'flex', alignItems: 'center', background: 'var(--bg-default)', borderRadius: '8px', padding: '0.5rem 1rem', border: '1px solid var(--border-color)' }}>
           <Search size={16} style={{ color: 'var(--text-secondary)', marginRight: '0.5rem' }} />
           <input type="text" placeholder="Cari keterangan..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ background: 'transparent', border: 'none', outline: 'none', width: '100%', fontSize: '0.9rem' }} />
         </div>
-        <select value={filterUser} onChange={e => setFilterUser(e.target.value)} style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
-          <option value="All">Semua User</option>
-          <option value="Iqbal">Iqbal</option>
-          <option value="Zela">Zela</option>
-        </select>
-        <select value={filterType} onChange={e => setFilterType(e.target.value)} style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
-          <option value="All">Semua Jenis</option>
-          <option value="IN">Pemasukan</option>
-          <option value="OUT">Pengeluaran</option>
-          <option value="TRANSFER">Transfer</option>
-        </select>
+        <div style={{ display: 'flex', gap: '0.75rem', flex: '1 1 100%' }}>
+          <select value={filterUser} onChange={e => setFilterUser(e.target.value)} style={{ flex: 1, padding: '0.6rem 0.5rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', fontSize: '0.9rem' }}>
+            <option value="All">Semua User</option>
+            <option value="Iqbal">Iqbal</option>
+            <option value="Zela">Zela</option>
+          </select>
+          <select value={filterType} onChange={e => setFilterType(e.target.value)} style={{ flex: 1, padding: '0.6rem 0.5rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', fontSize: '0.9rem' }}>
+            <option value="All">Semua Jenis</option>
+            <option value="IN">Pemasukan</option>
+            <option value="OUT">Pengeluaran</option>
+            <option value="TRANSFER">Transfer</option>
+          </select>
+        </div>
       </div>
 
 
