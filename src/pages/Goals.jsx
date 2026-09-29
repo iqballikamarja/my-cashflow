@@ -129,11 +129,9 @@ const totalAllocated = safeGoals.reduce((sum, g) => sum + (g.currentAmount || 0)
         <h1 className="text-h1" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: 0 }}>
           <Target size={28} /> Goals & Tabungan
         </h1>
-        {user?.role === 'admin' && (
-          <button className="btn-primary" onClick={() => setShowModal(true)}>
-            <Plus size={18} /> Tambah Goal
-          </button>
-        )}
+        <button className="btn-primary" onClick={() => setShowModal(true)}>
+          <Plus size={18} /> Tambah Goal
+        </button>
       </div>
 
       {/* Summary Cards */}
@@ -175,21 +173,19 @@ const totalAllocated = safeGoals.reduce((sum, g) => sum + (g.currentAmount || 0)
             return (
               <div key={g._id} className="card" style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
                 {/* Delete button */}
-                {user?.role === 'admin' && (
-                  <button
-                    onClick={() => handleDelete(g._id)}
-                    title="Hapus goal"
-                    style={{
-                      position: 'absolute', top: '1rem', right: '1rem',
-                      background: 'none', border: 'none', color: 'var(--text-secondary)',
-                      cursor: 'pointer', opacity: 0.5, transition: 'opacity 0.2s'
-                    }}
-                    onMouseOver={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = '#ef4444'; }}
-                    onMouseOut={e => { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                )}
+                <button
+                  onClick={() => handleDelete(g._id)}
+                  title="Hapus goal"
+                  style={{
+                    position: 'absolute', top: '1rem', right: '1rem',
+                    background: 'none', border: 'none', color: 'var(--text-secondary)',
+                    cursor: 'pointer', opacity: 0.5, transition: 'opacity 0.2s'
+                  }}
+                  onMouseOver={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = '#ef4444'; }}
+                  onMouseOut={e => { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                >
+                  <Trash2 size={16} />
+                </button>
 
                 {/* Type Badge */}
                 <div style={{
