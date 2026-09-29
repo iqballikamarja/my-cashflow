@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Receipt, CirclePlus, WalletCards, Landmark, LogOut, User, Menu, X, ChevronDown, ChevronRight, Tag, Shield, Users as UsersIcon } from 'lucide-react';
+import { LayoutDashboard, Receipt, CirclePlus, WalletCards, Landmark, LogOut, User, Menu, X, ChevronDown, ChevronRight, Tag, Shield, Users as UsersIcon, Target } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../config';
 
@@ -233,19 +233,29 @@ export default function Sidebar() {
             )}
           </div>
 
+          <div className="nav-item-wrapper">
+            <NavLink to="/goals" onClick={closeMobile} className={({ isActive }) => 'nav-link ' + (isActive ? 'active' : '')}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
+                <Target size={20} /><span>Goals & Tabungan</span>
+              </div>
+            </NavLink>
+          </div>
+
           {user?.role === 'admin' && (
-            <div className="nav-item-wrapper">
-              <NavLink to="/users" onClick={closeMobile} className={({ isActive }) => 'nav-link ' + (location.pathname === '/users' ? 'active' : '')}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
-                  <UsersIcon size={20} /><span>User Management</span>
-                </div>
-                {pendingCount > 0 && (
-                  <span style={{ background: 'var(--accent-danger)', color: 'white', fontSize: '0.7rem', fontWeight: 'bold', padding: '2px 6px', borderRadius: '999px' }}>
-                    {pendingCount}
-                  </span>
-                )}
-              </NavLink>
-            </div>
+            <>
+              <div className="nav-item-wrapper">
+                <NavLink to="/users" onClick={closeMobile} className={({ isActive }) => 'nav-link ' + (location.pathname === '/users' ? 'active' : '')}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
+                    <UsersIcon size={20} /><span>User Management</span>
+                  </div>
+                  {pendingCount > 0 && (
+                    <span style={{ background: 'var(--accent-danger)', color: 'white', fontSize: '0.7rem', fontWeight: 'bold', padding: '2px 6px', borderRadius: '999px' }}>
+                      {pendingCount}
+                    </span>
+                  )}
+                </NavLink>
+              </div>
+            </>
           )}
 
         </nav>
@@ -319,3 +329,4 @@ export default function Sidebar() {
     </>
   );
 }
+
