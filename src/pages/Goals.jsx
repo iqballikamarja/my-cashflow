@@ -243,9 +243,8 @@ const totalAllocated = safeGoals.reduce((sum, g) => sum + (g.currentAmount || 0)
                   </div>
 
                   {/* Allocate Button */}
-                  {user?.role === 'admin' && (
-                    <button
-                      onClick={() => { setAllocateModal(g); setAllocateAmount(''); }}
+                  <button
+                    onClick={() => { setAllocateModal(g); setAllocateAmount(''); }}
                       className="btn-toggle"
                       style={{
                         width: '100%', marginTop: '0.75rem',
@@ -258,7 +257,6 @@ const totalAllocated = safeGoals.reduce((sum, g) => sum + (g.currentAmount || 0)
                     >
                       <TrendingUp size={14} /> {unallocated > 0 ? 'Alokasikan Dana' : 'Saldo BSI Kosong'}
                     </button>
-                  )}
                 </div>
               </div>
             );
