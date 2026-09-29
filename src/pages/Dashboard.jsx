@@ -858,19 +858,7 @@ export default function Dashboard() {
 
             <h1 className="text-h1" style={{ margin: 0 }}>Overview {viewMode !== 'Semua' && `(${viewMode})`}</h1>
 
-            <button 
-
-              onClick={() => setShowBalance(!showBalance)} 
-
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.5rem', borderRadius: '50%' }}
-
-              title={showBalance ? "Sembunyikan Saldo" : "Tampilkan Saldo"}
-
-            >
-
-              {showBalance ? <Eye size={24} /> : <EyeOff size={24} />}
-
-            </button>
+            
 
           </div>
 
@@ -970,7 +958,7 @@ export default function Dashboard() {
 
 
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', marginTop: '1.5rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1.5rem' }}>
 
         
 
