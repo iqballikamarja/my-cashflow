@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import { Receipt, Trash2, Edit3, X, Save, CalendarDays, Tag, Wallet, DollarSign, FileText, Calendar } from 'lucide-react';
+import { Search, Receipt, Trash2, Edit3, X, Save, CalendarDays, Tag, Wallet, DollarSign, FileText, Calendar } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
 
@@ -25,6 +25,11 @@ export default function Transactions() {
   const location = useLocation();
 
   const [transactions, setTransactions] = useState([]);
+
+  const [filterUser, setFilterUser] = useState('All');
+  const [filterType, setFilterType] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+
 
   const [loading, setLoading] = useState(true);
 
@@ -233,6 +238,14 @@ export default function Transactions() {
 
   const categories = editForm?.type === 'TRANSFER' ? [] : (editForm?.type === 'IN' ? CATEGORIES_IN : CATEGORIES_OUT);
 
+  
+  const filteredTxs = transactions.filter(t => {
+    if (filterUser !== 'All' && t.user !== filterUser) return false;
+    if (filterType !== 'All' && t.type !== filterType) return false;
+    if (searchQuery && t.description && !t.description.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    return true;
+  });
+
   const txOwner = editTx?.user || user.username;
 
   const myAccounts = Object.keys(allAccounts).length > 0 && allAccounts[txOwner] 
@@ -283,7 +296,7 @@ export default function Transactions() {
 
   
 
-  const sortedTransactions = [...transactions].sort((a, b) => {
+  const sortedTransactions = [...filteredTxs].sort((a, b) => {
 
     let aVal = a[sortConfig.key] || '';
 
@@ -346,30 +359,48 @@ export default function Transactions() {
          <div className="text-body">Loading...</div>
 
       ) : (
+<>
+<div className="card custom-scroll" style={{ padding: 0, overflowY: 'auto', overflowX: 'auto', maxHeight: 'calc(100vh - 180px)' }}>
+<div style={{ padding: '1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ flex: 1, minWidth: '200px', display: 'flex', alignItems: 'center', background: 'var(--bg-default)', borderRadius: '8px', padding: '0.5rem 1rem', border: '1px solid var(--border-color)' }}>
+          <Search size={16} style={{ color: 'var(--text-secondary)', marginRight: '0.5rem' }} />
+          <input type="text" placeholder="Cari keterangan..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ background: 'transparent', border: 'none', outline: 'none', width: '100%', fontSize: '0.9rem' }} />
+        </div>
+        <select value={filterUser} onChange={e => setFilterUser(e.target.value)} style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+          <option value="All">Semua User</option>
+          <option value="Iqbal">Iqbal</option>
+          <option value="Zela">Zela</option>
+        </select>
+        <select value={filterType} onChange={e => setFilterType(e.target.value)} style={{ padding: '0.6rem 1rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+          <option value="All">Semua Jenis</option>
+          <option value="IN">Pemasukan</option>
+          <option value="OUT">Pengeluaran</option>
+          <option value="TRANSFER">Transfer</option>
+        </select>
+      </div>
 
-        <div className="card" style={{ marginTop: '0', overflowX: 'auto' }}>
 
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, textAlign: 'left' }}>
 
             <thead>
 
-              <tr style={{ borderBottom: '2px solid var(--border-color)', color: 'var(--text-secondary)' }}>
+              <tr style={{ color: 'var(--text-secondary)' }}>
 
-                <th style={{ padding: '0.4rem 0.5rem', fontWeight: 600, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('date')}>Tanggal{getSortIcon('date')}</th>
+                <th style={{ borderBottom: '2px solid var(--border-color)',  position: 'sticky', top: 0, background: '#ffffff', zIndex: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.05)',  padding: '0.4rem 0.5rem', fontWeight: 600, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('date')}>Tanggal{getSortIcon('date')}</th>
 
-                <th style={{ padding: '0.4rem 0.5rem', fontWeight: 600, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('user')}>User{getSortIcon('user')}</th>
+                <th style={{ borderBottom: '2px solid var(--border-color)',  position: 'sticky', top: 0, background: '#ffffff', zIndex: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.05)',  padding: '0.4rem 0.5rem', fontWeight: 600, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('user')}>User{getSortIcon('user')}</th>
 
-                <th style={{ padding: '0.4rem 0.5rem', fontWeight: 600, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('type')}>Jenis{getSortIcon('type')}</th>
+                <th style={{ borderBottom: '2px solid var(--border-color)',  position: 'sticky', top: 0, background: '#ffffff', zIndex: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.05)',  padding: '0.4rem 0.5rem', fontWeight: 600, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('type')}>Jenis{getSortIcon('type')}</th>
 
-                <th style={{ padding: '0.4rem 0.5rem', fontWeight: 600, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('account')}>Rekening{getSortIcon('account')}</th>
+                <th style={{ borderBottom: '2px solid var(--border-color)',  position: 'sticky', top: 0, background: '#ffffff', zIndex: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.05)',  padding: '0.4rem 0.5rem', fontWeight: 600, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('account')}>Rekening{getSortIcon('account')}</th>
 
-                <th style={{ padding: '0.4rem 0.5rem', fontWeight: 600, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('category')}>Kategori{getSortIcon('category')}</th>
+                <th style={{ borderBottom: '2px solid var(--border-color)',  position: 'sticky', top: 0, background: '#ffffff', zIndex: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.05)',  padding: '0.4rem 0.5rem', fontWeight: 600, cursor: 'pointer', userSelect: 'none' }} onClick={() => requestSort('category')}>Kategori{getSortIcon('category')}</th>
 
-                <th style={{ padding: '0.4rem 0.5rem', fontWeight: 600 }}>Keterangan</th>
+                <th style={{ borderBottom: '2px solid var(--border-color)',  position: 'sticky', top: 0, background: '#ffffff', zIndex: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.05)',  padding: '0.4rem 0.5rem', fontWeight: 600 }}>Keterangan</th>
 
-                <th style={{ padding: '0.4rem 0.5rem', fontWeight: 600, textAlign: 'right' }}>Nominal</th>
+                <th style={{ borderBottom: '2px solid var(--border-color)',  position: 'sticky', top: 0, background: '#ffffff', zIndex: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.05)',  padding: '0.4rem 0.5rem', fontWeight: 600, textAlign: 'right' }}>Nominal</th>
 
-                <th style={{ padding: '0.4rem 0.5rem', fontWeight: 600, textAlign: 'center' }}>Aksi</th>
+                <th style={{ borderBottom: '2px solid var(--border-color)',  position: 'sticky', top: 0, background: '#ffffff', zIndex: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.05)',  padding: '0.4rem 0.5rem', fontWeight: 600, textAlign: 'center' }}>Aksi</th>
 
               </tr>
 
@@ -379,17 +410,17 @@ export default function Transactions() {
 
               {sortedTransactions.map(t => (
 
-                <tr key={t._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                <tr key={t._id}>
 
-                  <td style={{ padding: '0.4rem 0.5rem', color: 'var(--text-secondary)' }}>{t.date}</td>
+                  <td style={{ borderBottom: '1px solid var(--border-color)',  padding: '0.4rem 0.5rem', color: 'var(--text-secondary)' }}>{t.date}</td>
 
-                  <td style={{ padding: '0.4rem 0.5rem' }}>
+                  <td style={{ borderBottom: '1px solid var(--border-color)',  padding: '0.4rem 0.5rem' }}>
 
                     <span style={{ fontWeight: 600 }}>{t.user}</span>
 
                   </td>
 
-                  <td style={{ padding: '0.4rem 0.5rem' }}>
+                  <td style={{ borderBottom: '1px solid var(--border-color)',  padding: '0.4rem 0.5rem' }}>
 
                     <span className={`chip ${t.type === 'IN' ? 'active' : ''}`} style={{ 
 
@@ -407,23 +438,23 @@ export default function Transactions() {
 
                   </td>
 
-                  <td style={{ padding: '0.4rem 0.5rem', fontWeight: 500 }}>
+                  <td style={{ borderBottom: '1px solid var(--border-color)',  padding: '0.4rem 0.5rem', fontWeight: 500 }}>
 
                     {t.type === 'TRANSFER' ? t.account + ' \u2192 ' + t.toAccount : t.account}
 
                   </td>
 
-                  <td style={{ padding: '0.4rem 0.5rem', color: 'var(--text-secondary)' }}>{t.category}</td>
+                  <td style={{ borderBottom: '1px solid var(--border-color)',  padding: '0.4rem 0.5rem', color: 'var(--text-secondary)' }}>{t.category}</td>
 
-                  <td style={{ padding: '0.4rem 0.5rem', color: 'var(--text-secondary)' }}>{t.description}</td>
+                  <td style={{ borderBottom: '1px solid var(--border-color)',  padding: '0.4rem 0.5rem', color: 'var(--text-secondary)' }}>{t.description}</td>
 
-                  <td style={{ padding: '0.4rem 0.5rem', textAlign: 'right', fontWeight: 600, color: t.type === 'IN' ? 'var(--accent-success)' : t.type === 'OUT' ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                  <td style={{ borderBottom: '1px solid var(--border-color)',  padding: '0.4rem 0.5rem', textAlign: 'right', fontWeight: 600, color: t.type === 'IN' ? 'var(--accent-success)' : t.type === 'OUT' ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
 
                     {t.type === 'IN' ? '+' : t.type === 'OUT' ? '-' : ''} {formatIDR(t.amount)}
 
                   </td>
 
-                  <td style={{ padding: '0.4rem 0.5rem', textAlign: 'center' }}>
+                  <td style={{ borderBottom: '1px solid var(--border-color)',  padding: '0.4rem 0.5rem', textAlign: 'center' }}>
 
                     <button onClick={() => handleEdit(t)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', marginRight: '0.5rem' }} title="Edit"><Edit3 size={18} /></button>
 
@@ -439,7 +470,7 @@ export default function Transactions() {
 
                 <tr>
 
-                  <td colSpan={8} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                  <td colSpan={8} style={{ borderBottom: '1px solid var(--border-color)',  padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
 
                     Belum ada transaksi di periode ini.
 
@@ -454,8 +485,8 @@ export default function Transactions() {
           </table>
 
         </div>
-
-      )}
+</>
+)}
 
 
 
