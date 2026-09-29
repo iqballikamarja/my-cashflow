@@ -92,12 +92,26 @@ export default function Users() {
           <tbody>
             {usersList.map(u => (
               <tr key={u._id}>
-                <td style={{ fontWeight: 600 }}>{u.username}</td>
-                <td>{u.role}</td>
                 <td>
-                  <span className={`chip ${u.status === 'approved' ? 'bg-success text-success' : u.status === 'pending' ? 'bg-warning text-warning' : 'bg-danger text-danger'}`} style={{ padding: '4px 8px', fontSize: '12px' }}>
-                    {u.status.toUpperCase()}
-                  </span>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '14px', boxShadow: '0 4px 6px rgba(99, 102, 241, 0.2)' }}>
+      {u.username[0].toUpperCase()}
+    </div>
+    <div>
+      <div style={{ fontWeight: 700, fontSize: '14px' }}>{u.username}</div>
+      <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Account</div>
+    </div>
+  </div>
+</td>
+                <td>
+  <span style={{ padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, background: u.role === 'admin' ? '#fef3c7' : '#f1f5f9', color: u.role === 'admin' ? '#b45309' : '#475569', display: 'inline-block' }}>
+    {u.role.toUpperCase()}
+  </span>
+</td>
+                <td>
+                  <span style={{ padding: '6px 12px', borderRadius: '99px', fontSize: '12px', fontWeight: 600, background: u.status === 'approved' ? '#d1fae5' : '#fef2f2', color: u.status === 'approved' ? '#059669' : '#dc2626', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+    {u.status === 'approved' ? <Check size={14}/> : <X size={14}/>} {u.status.toUpperCase()}
+</span>
                 </td>
                 <td>
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
