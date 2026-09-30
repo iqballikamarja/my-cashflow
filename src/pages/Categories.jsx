@@ -103,9 +103,9 @@ export default function Categories() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingBottom: '2rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', paddingBottom: '2rem' }}>
       
-      <div className="sticky-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+      <div className="sticky-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '0.25rem', padding: '1.25rem 2rem 1rem 2rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <Tag size={28} color="var(--accent-primary)" />
           <h2 className="text-h1" style={{ margin: 0 }}>
