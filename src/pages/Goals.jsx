@@ -1,26 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import CustomDatePicker from '../components/CustomDatePicker';
 import { format, parseISO } from 'date-fns';
-import { Target, Plus, X, Trash2, TrendingUp, Shield, Heart, Plane, Wallet } from 'lucide-react';
+import { Target, Plus, X, Trash2, Edit3, TrendingUp, Shield, Heart, Plane, Wallet } from 'lucide-react';
 import { API_URL } from '../config';
 import { useAuth } from '../context/AuthContext';
 
 const TYPE_CONFIG = {
-  darurat: { label: 'Dana Darurat', icon: Shield, color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
-  survival: { label: 'Bertahan Hidup', icon: Heart, color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
+  darurat: { label: 'Emergency Fund', icon: Shield, color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
+  survival: { label: 'Survival Fund', icon: Heart, color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
   sinking: { label: 'Holiday Fund', icon: Plane, color: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe' },
+};
+
+const formatIndonesianDate = (dateStr) => {
+  if (!dateStr) return '';
+  const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    const day = parseInt(parts[2], 10);
+    const month = months[parseInt(parts[1], 10) - 1] || parts[1];
+    const year = parts[0];
+    return `${day} ${month} ${year}`;
+  }
+  if (parts.length === 2) {
+    const month = months[parseInt(parts[1], 10) - 1] || parts[1];
+    return `${month} ${parts[0]}`;
+  }
+  return dateStr;
 };
 
 export default function Goals() {
   const { user } = useAuth();
   const [goals, setGoals] = useState([]);
   const [balances, setBalances] = useState({});
+  const [allAccounts, setAllAccounts] = useState({ Iqbal: [], Zela: [] });
   const [loading, setLoading] = useState(true);
   const [survivalTarget, setSurvivalTarget] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const [editModalGoal, setEditModalGoal] = useState(null);
+  const [editForm, setEditForm] = useState({ name: '', type: 'darurat', accountKey: '', targetAmount: '', deadline: '' });
   const [allocateModal, setAllocateModal] = useState(null);
   const [allocateAmount, setAllocateAmount] = useState('');
-  const [form, setForm] = useState({ name: '', type: 'darurat', targetAmount: '', deadline: '' });
+  const [form, setForm] = useState({ 
+    name: '', 
+    type: 'darurat', 
+    accountKey: 'Iqbal:BSI',
+    targetAmount: '', 
+    deadline: '' 
+  });
 
   const token = localStorage.getItem('token');
 
@@ -47,14 +73,23 @@ export default function Goals() {
 
   const fetchData = async () => {
     try {
-      const [goalRes, balRes] = await Promise.all([
+      const [goalRes, balRes, accRes] = await Promise.all([
         fetch(`${API_URL}/api/goals`, { headers: { 'Authorization': 'Bearer ' + token } }),
-        fetch(`${API_URL}/api/transactions/balances`, { headers: { 'Authorization': 'Bearer ' + token } })
+        fetch(`${API_URL}/api/transactions/balances`, { headers: { 'Authorization': 'Bearer ' + token } }),
+        fetch(`${API_URL}/api/accounts/all`, { headers: { 'Authorization': 'Bearer ' + token } })
       ]);
       const goalData = await goalRes.json();
       const balData = await balRes.json();
-      setGoals(goalData);
-      setBalances(balData);
+      const accData = await accRes.json();
+      setGoals(Array.isArray(goalData) ? goalData : []);
+      setBalances(balData && !balData.message ? balData : {});
+      if (accData && typeof accData === 'object' && !accData.message) {
+        setAllAccounts(accData);
+        const firstUser = Object.keys(accData)[0];
+        if (firstUser && accData[firstUser].length > 0) {
+          setForm(prev => prev.accountKey ? prev : { ...prev, accountKey: `${firstUser}:${accData[firstUser][0]}` });
+        }
+      }
     } catch (err) { console.error(err); }
     setLoading(false);
   };
@@ -64,9 +99,93 @@ export default function Goals() {
     fetchSurvivalTarget();
   }, []);
 
+  const safeBalances = balances || {};
+  const safeGoals = Array.isArray(goals) ? goals : [];
+
+  const getAccountPhysicalBalance = (accountName, accountUser) => {
+    const acc = (accountName || 'BSI').toUpperCase();
+    if (accountUser) {
+      const u = accountUser.charAt(0).toUpperCase() + accountUser.slice(1).toLowerCase();
+      const uBals = safeBalances[u] || {};
+      const key = Object.keys(uBals).find(k => k.toUpperCase() === acc);
+      return key ? (uBals[key] || 0) : 0;
+    } else {
+      let total = 0;
+      ['Iqbal', 'Zela'].forEach(u => {
+        const uBals = safeBalances[u] || {};
+        const key = Object.keys(uBals).find(k => k.toUpperCase() === acc);
+        if (key) total += (uBals[key] || 0);
+      });
+      return total;
+    }
+  };
+
+  const getAccountAllocated = (accountName, accountUser) => {
+    const acc = (accountName || 'BSI').toUpperCase();
+    const u = (accountUser || '').toUpperCase();
+    return safeGoals.filter(g => {
+      const gAcc = (g.account || 'BSI').toUpperCase();
+      const gU = (g.accountUser || '').toUpperCase();
+      return gAcc === acc && gU === u;
+    }).reduce((sum, g) => sum + (g.currentAmount || 0), 0);
+  };
+
+  const getAccountUnallocated = (accountName, accountUser) => {
+    return getAccountPhysicalBalance(accountName, accountUser) - getAccountAllocated(accountName, accountUser);
+  };
+
+  // Helper to see if an account already has goals attached
+  const getAccountGoalIndicator = (userName, accName, excludeGoalId = null) => {
+    const u = (userName || '').toLowerCase();
+    const a = (accName || '').toUpperCase();
+    const matched = safeGoals.filter(g => {
+      if (excludeGoalId && g._id === excludeGoalId) return false;
+      const gAcc = (g.account || 'BSI').toUpperCase();
+      const gUser = (g.accountUser || '').toLowerCase();
+      if (gAcc !== a) return false;
+      if (gUser && gUser !== u) return false;
+      return true;
+    });
+    if (matched.length === 0) return { hasGoal: false, label: '' };
+    return { hasGoal: true, label: ` [${matched.map(g => g.name).join(', ')}]` };
+  };
+
+  const totalAllocated = safeGoals.reduce((sum, g) => sum + (g.currentAmount || 0), 0);
+  const totalTarget = safeGoals.reduce((sum, g) => {
+    const target = g.type === 'survival' ? survivalTarget : (g.targetAmount || 0);
+    return sum + target;
+  }, 0);
+
+  const linkedAccountsMap = {};
+  safeGoals.forEach(g => {
+    const acc = g.account || 'BSI';
+    const u = g.accountUser || '';
+    const key = `${u}:${acc}`;
+    if (!linkedAccountsMap[key]) {
+      linkedAccountsMap[key] = { acc, u };
+    }
+  });
+  const totalLinkedPhysical = Object.values(linkedAccountsMap).reduce((sum, item) => {
+    return sum + getAccountPhysicalBalance(item.acc, item.u);
+  }, 0);
+  const totalUnallocated = Math.max(0, totalLinkedPhysical - totalAllocated);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const payload = { ...form, targetAmount: Number(form.targetAmount) || 0 };
+    const parts = (form.accountKey || '').split(':');
+    const accUser = parts.length > 1 ? parts[0] : '';
+    const accName = parts.length > 1 ? parts[1] : (form.accountKey || 'BSI');
+
+    const goalName = form.type === 'survival' ? 'Bertahan Hidup' : (form.name || 'Goal Baru');
+    const payload = { 
+      name: goalName,
+      type: form.type,
+      account: accName,
+      accountUser: accUser,
+      targetAmount: form.type === 'survival' ? 0 : (Number(form.targetAmount) || 0),
+      deadline: form.type === 'sinking' ? form.deadline : ''
+    };
+
     try {
       const res = await fetch(`${API_URL}/api/goals`, {
         method: 'POST',
@@ -75,14 +194,55 @@ export default function Goals() {
       });
       if (res.ok) {
         setShowModal(false);
-        setForm({ name: '', type: 'darurat', targetAmount: '', deadline: '' });
+        setForm(prev => ({ ...prev, name: '', type: 'darurat', targetAmount: '', deadline: '' }));
+        fetchData();
+      }
+    } catch (err) { console.error(err); }
+  };
+
+  const handleOpenEdit = (g) => {
+    setEditModalGoal(g);
+    setEditForm({
+      name: g.name || '',
+      type: g.type || 'darurat',
+      accountKey: `${g.accountUser || 'Iqbal'}:${g.account || 'BSI'}`,
+      targetAmount: g.targetAmount || '',
+      deadline: g.deadline || ''
+    });
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editModalGoal) return;
+    const parts = (editForm.accountKey || '').split(':');
+    const accUser = parts.length > 1 ? parts[0] : '';
+    const accName = parts.length > 1 ? parts[1] : (editForm.accountKey || 'BSI');
+
+    const goalName = editForm.type === 'survival' ? 'Bertahan Hidup' : (editForm.name || 'Goal Baru');
+    const payload = {
+      name: goalName,
+      type: editForm.type,
+      account: accName,
+      accountUser: accUser,
+      targetAmount: editForm.type === 'survival' ? 0 : (Number(editForm.targetAmount) || 0),
+      deadline: editForm.type === 'sinking' ? editForm.deadline : ''
+    };
+
+    try {
+      const res = await fetch(`${API_URL}/api/goals/${editModalGoal._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        setEditModalGoal(null);
         fetchData();
       }
     } catch (err) { console.error(err); }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Hapus goal ini? Saldo yang teralokasi akan kembali ke saldo bebas.')) return;
+    if (!window.confirm('Hapus goal ini? Saldo yang teralokasi akan kembali ke saldo bebas rekening.')) return;
     try {
       const res = await fetch(`${API_URL}/api/goals/${id}`, {
         method: 'DELETE',
@@ -92,11 +252,15 @@ export default function Goals() {
     } catch (err) { console.error(err); }
   };
 
+  const formatIDR = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num || 0);
+
+  const modalUnallocated = allocateModal ? getAccountUnallocated(allocateModal.account, allocateModal.accountUser) : 0;
+
   const handleAllocate = async () => {
     if (!allocateModal) return;
     const amount = Number(allocateAmount);
     if (isNaN(amount) || amount <= 0) return alert('Nominal tidak valid');
-    if (amount > unallocated) return alert(`Saldo bebas tidak cukup. Tersedia: ${formatIDR(unallocated)}`);
+    if (amount > modalUnallocated) return alert(`Saldo bebas tidak cukup. Tersedia: ${formatIDR(modalUnallocated)}`);
 
     try {
       const res = await fetch(`${API_URL}/api/goals/${allocateModal._id}`, {
@@ -111,16 +275,6 @@ export default function Goals() {
       }
     } catch (err) { console.error(err); }
   };
-
-  const formatIDR = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num || 0);
-
-  const safeBalances = balances || {};
-const totalBSI = (safeBalances['Iqbal']?.['BSI'] || 0) + (safeBalances['Zela']?.['BSI'] || 0);
-  const safeGoals = Array.isArray(goals) ? goals : [];
-const totalAllocated = safeGoals.reduce((sum, g) => sum + (g.currentAmount || 0), 0);
-  const unallocated = totalBSI - totalAllocated;
-
-  if (loading) return <div style={{ paddingBottom: "2rem" }}><div className="text-body">Loading...</div></div>;
 
   return (
     <div style={{ paddingBottom: "2rem" }}>
@@ -139,19 +293,23 @@ const totalAllocated = safeGoals.reduce((sum, g) => sum + (g.currentAmount || 0)
         <div className="account-card" style={{ background: '#0d9488', color: '#fff' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
             <Wallet size={20} />
-            <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.9 }}>Saldo Fisik BSI</span>
+            <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.9 }}>Total Tabungan Terkumpul</span>
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 700 }}>{formatIDR(totalBSI)}</div>
-          <div style={{ fontSize: '0.8rem', opacity: 0.8, marginTop: '0.25rem' }}>Rekening BSI Iqbal</div>
+          <div style={{ fontSize: '2rem', fontWeight: 700 }}>{formatIDR(totalAllocated)}</div>
+          <div style={{ fontSize: '0.8rem', opacity: 0.8, marginTop: '0.25rem' }}>
+            Dari target {formatIDR(totalTarget)} ({totalTarget > 0 ? Math.round((totalAllocated / totalTarget) * 100) : 0}%)
+          </div>
         </div>
 
-        <div className="account-card" style={{ background: unallocated < 0 ? '#dc2626' : '#1e293b', color: '#fff' }}>
+        <div className="account-card" style={{ background: totalUnallocated < 0 ? '#dc2626' : '#1e293b', color: '#fff' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
             <Target size={20} />
-            <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.9 }}>Belum Dialokasikan</span>
+            <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.9 }}>Sisa Saldo Bebas Rekening</span>
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 700 }}>{formatIDR(unallocated)}</div>
-          <div style={{ fontSize: '0.8rem', opacity: 0.8, marginTop: '0.25rem' }}>Uang BSI yang belum masuk kantong</div>
+          <div style={{ fontSize: '2rem', fontWeight: 700 }}>{formatIDR(totalUnallocated)}</div>
+          <div style={{ fontSize: '0.8rem', opacity: 0.8, marginTop: '0.25rem' }}>
+            Uang belum dialokasikan dari rekening terhubung
+          </div>
         </div>
       </div>
 
@@ -169,33 +327,60 @@ const totalAllocated = safeGoals.reduce((sum, g) => sum + (g.currentAmount || 0)
             const IconComponent = cfg.icon;
             const actualTarget = g.type === 'survival' ? survivalTarget : (g.targetAmount || 0);
             const progress = actualTarget > 0 ? Math.min(100, Math.round((g.currentAmount / actualTarget) * 100)) : 0;
+            const unallocated = getAccountUnallocated(g.account, g.accountUser);
+            const accDisplay = `${g.account || 'BSI'}${g.accountUser ? ` (${g.accountUser})` : ''}`;
 
             return (
               <div key={g._id} className="card" style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
-                {/* Delete button */}
-                <button
-                  onClick={() => handleDelete(g._id)}
-                  title="Hapus goal"
-                  style={{
-                    position: 'absolute', top: '1rem', right: '1rem',
-                    background: 'none', border: 'none', color: 'var(--text-secondary)',
-                    cursor: 'pointer', opacity: 0.5, transition: 'opacity 0.2s'
-                  }}
-                  onMouseOver={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = '#ef4444'; }}
-                  onMouseOut={e => { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-                >
-                  <Trash2 size={16} />
-                </button>
+                {/* Action buttons (Edit & Delete) */}
+                <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <button
+                    onClick={() => handleOpenEdit(g)}
+                    title="Edit goal"
+                    style={{
+                      background: 'none', border: 'none', color: 'var(--text-secondary)',
+                      cursor: 'pointer', opacity: 0.6, transition: 'all 0.2s', padding: '0.2rem'
+                    }}
+                    onMouseOver={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--accent-primary)'; }}
+                    onMouseOut={e => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                  >
+                    <Edit3 size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(g._id)}
+                    title="Hapus goal"
+                    style={{
+                      background: 'none', border: 'none', color: 'var(--text-secondary)',
+                      cursor: 'pointer', opacity: 0.6, transition: 'all 0.2s', padding: '0.2rem'
+                    }}
+                    onMouseOver={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = '#ef4444'; }}
+                    onMouseOut={e => { e.currentTarget.style.opacity = '0.6'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
 
-                {/* Type Badge */}
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
-                  padding: '0.3rem 0.75rem', borderRadius: '999px',
-                  background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`,
-                  fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase',
-                  letterSpacing: '0.05em', alignSelf: 'flex-start', marginBottom: '1rem'
-                }}>
-                  <IconComponent size={12} /> {cfg.label}
+                {/* Badges row: Type & Rekening */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem', paddingRight: '3rem' }}>
+                  <div style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+                    padding: '0.3rem 0.75rem', borderRadius: '999px',
+                    background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`,
+                    fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase',
+                    letterSpacing: '0.05em'
+                  }}>
+                    <IconComponent size={12} /> {cfg.label}
+                  </div>
+
+                  <div style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+                    padding: '0.3rem 0.65rem', borderRadius: '999px',
+                    background: 'var(--bg-default)', color: 'var(--text-secondary)',
+                    border: '1px solid var(--border-color)',
+                    fontSize: '0.7rem', fontWeight: 600
+                  }}>
+                    <Wallet size={12} /> {accDisplay}
+                  </div>
                 </div>
 
                 {/* Title */}
@@ -204,7 +389,7 @@ const totalAllocated = safeGoals.reduce((sum, g) => sum + (g.currentAmount || 0)
                 {/* Subtitle */}
                 {g.type === 'sinking' && g.deadline && (
                   <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0 0 1rem 0' }}>
-                    Target: {g.deadline}
+                    Target: {formatIndonesianDate(g.deadline)}
                   </p>
                 )}
                 {g.type === 'survival' && (
@@ -235,24 +420,24 @@ const totalAllocated = safeGoals.reduce((sum, g) => sum + (g.currentAmount || 0)
                     }} />
                   </div>
                   <div style={{ textAlign: 'right', fontSize: '0.75rem', fontWeight: 700, color: progress >= 100 ? 'var(--accent-success)' : cfg.color }}>
-                    {progress}%{progress >= 100 ? ' \u2714' : ''}
+                    {progress}%{progress >= 100 ? ' ✔' : ''}
                   </div>
 
                   {/* Allocate Button */}
                   <button
                     onClick={() => { setAllocateModal(g); setAllocateAmount(''); }}
-                      className="btn-toggle"
-                      style={{
-                        width: '100%', marginTop: '0.75rem',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
-                        fontSize: '0.85rem', fontWeight: 600,
-                        cursor: unallocated <= 0 ? 'not-allowed' : 'pointer',
-                        opacity: unallocated <= 0 ? 0.5 : 1
-                      }}
-                      disabled={unallocated <= 0}
-                    >
-                      <TrendingUp size={14} /> {unallocated > 0 ? 'Alokasikan Dana' : 'Saldo BSI Kosong'}
-                    </button>
+                    className="btn-toggle"
+                    style={{
+                      width: '100%', marginTop: '0.75rem',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
+                      fontSize: '0.85rem', fontWeight: 600,
+                      cursor: unallocated <= 0 ? 'not-allowed' : 'pointer',
+                      opacity: unallocated <= 0 ? 0.5 : 1
+                    }}
+                    disabled={unallocated <= 0}
+                  >
+                    <TrendingUp size={14} /> {unallocated > 0 ? 'Alokasikan Dana' : `Saldo ${g.account || 'BSI'} Kosong`}
+                  </button>
                 </div>
               </div>
             );
@@ -272,15 +457,55 @@ const totalAllocated = safeGoals.reduce((sum, g) => sum + (g.currentAmount || 0)
               <div className="form-group">
                 <label className="form-label">Tipe Goal</label>
                 <select className="form-input" value={form.type} onChange={e => setForm({...form, type: e.target.value})}>
-                  <option value="darurat">Dana Darurat (Rumah, Kesehatan, dll)</option>
-                  <option value="survival">Dana Bertahan Hidup (Auto: max OUT x 2)</option>
-                  <option value="sinking">Holiday Fund (Liburan, Gadget, dll)</option>
+                  <option value="darurat">Emergency Fund</option>
+                  <option value="survival">Survival Fund</option>
+                  <option value="sinking">Holiday Fund</option>
                 </select>
               </div>
+
               <div className="form-group">
-                <label className="form-label">Nama Goal</label>
-                <input type="text" className="form-input" required placeholder="Cth: Darurat Kesehatan" value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
+                <label className="form-label">Rekening / Bank Alokasi</label>
+                <select 
+                  className="form-input" 
+                  value={form.accountKey} 
+                  onChange={e => setForm({...form, accountKey: e.target.value})}
+                  required
+                >
+                  <option value="">-- Pilih Rekening / Bank --</option>
+                  {Object.entries(allAccounts).map(([u, accs]) => {
+                    const initial = u.charAt(0).toUpperCase();
+                    const name = u.charAt(0).toUpperCase() + u.slice(1).toLowerCase();
+                    const circleInitial = initial === 'I' ? 'Ⓘ' : initial === 'Z' ? 'Ⓩ' : `[${initial}]`;
+                    return (
+                      <optgroup key={u} label={`${circleInitial} ${name}`}>
+                        {accs.map(a => {
+                          const { hasGoal, label } = getAccountGoalIndicator(u, a);
+                          return (
+                            <option key={`${u}:${a}`} value={`${u}:${a}`}>
+                              {hasGoal ? `🎯 ${a}${label}` : a}
+                            </option>
+                          );
+                        })}
+                      </optgroup>
+                    );
+                  })}
+                </select>
               </div>
+
+              {form.type !== 'survival' && (
+                <div className="form-group">
+                  <label className="form-label">Nama Goal</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    required
+                    placeholder={form.type === 'sinking' ? 'Contoh: Liburan ke Bandung' : 'Contoh: Darurat Kesehatan'}
+                    value={form.name}
+                    onChange={e => setForm({...form, name: e.target.value})}
+                  />
+                </div>
+              )}
+
               {form.type !== 'survival' && (
                 <div className="form-group">
                   <label className="form-label">Target Nominal (Rp)</label>
@@ -299,6 +524,90 @@ const totalAllocated = safeGoals.reduce((sum, g) => sum + (g.currentAmount || 0)
         </div>
       )}
 
+      {/* Edit Goal Modal */}
+      {editModalGoal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 50, padding: '1rem' }}>
+          <div className="card" style={{ width: '100%', maxWidth: '420px', animation: 'fadeIn 0.2s ease' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 className="text-h2" style={{ margin: 0 }}>Edit Goal</h3>
+              <button onClick={() => setEditModalGoal(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: '0.25rem' }}><X size={20} /></button>
+            </div>
+            <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="form-group">
+                <label className="form-label">Tipe Goal</label>
+                <select className="form-input" value={editForm.type} onChange={e => setEditForm({...editForm, type: e.target.value})}>
+                  <option value="darurat">Emergency Fund</option>
+                  <option value="survival">Survival Fund</option>
+                  <option value="sinking">Holiday Fund</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Rekening / Bank Alokasi</label>
+                <select 
+                  className="form-input" 
+                  value={editForm.accountKey} 
+                  onChange={e => setEditForm({...editForm, accountKey: e.target.value})}
+                  required
+                >
+                  <option value="">-- Pilih Rekening / Bank --</option>
+                  {Object.entries(allAccounts).map(([u, accs]) => {
+                    const initial = u.charAt(0).toUpperCase();
+                    const name = u.charAt(0).toUpperCase() + u.slice(1).toLowerCase();
+                    const circleInitial = initial === 'I' ? 'Ⓘ' : initial === 'Z' ? 'Ⓩ' : `[${initial}]`;
+                    return (
+                      <optgroup key={u} label={`${circleInitial} ${name}`}>
+                        {accs.map(a => {
+                          const { hasGoal, label } = getAccountGoalIndicator(u, a, editModalGoal._id);
+                          return (
+                            <option key={`${u}:${a}`} value={`${u}:${a}`}>
+                              {hasGoal ? `🎯 ${a}${label}` : a}
+                            </option>
+                          );
+                        })}
+                      </optgroup>
+                    );
+                  })}
+                </select>
+              </div>
+
+              {editForm.type !== 'survival' && (
+                <div className="form-group">
+                  <label className="form-label">Nama Goal</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    required
+                    placeholder={editForm.type === 'sinking' ? 'Contoh: Liburan ke Bandung' : 'Contoh: Darurat Kesehatan'}
+                    value={editForm.name}
+                    onChange={e => setEditForm({...editForm, name: e.target.value})}
+                  />
+                </div>
+              )}
+
+              {editForm.type !== 'survival' && (
+                <div className="form-group">
+                  <label className="form-label">Target Nominal (Rp)</label>
+                  <input type="number" className="form-input" required placeholder="1000000" value={editForm.targetAmount} onChange={e => setEditForm({...editForm, targetAmount: e.target.value})} />
+                </div>
+              )}
+
+              {editForm.type === 'sinking' && (
+                <div className="form-group">
+                  <label className="form-label">Target Waktu</label>
+                  <CustomDatePicker selected={editForm.deadline ? parseISO(editForm.deadline) : new Date()} onChange={(date) => setEditForm({...editForm, deadline: format(date, 'yyyy-MM-dd')})} required />
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <button type="button" onClick={() => setEditModalGoal(null)} className="btn-toggle" style={{ flex: 1 }}>Batal</button>
+                <button type="submit" className="btn-primary" style={{ flex: 1 }}>Simpan Perubahan</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Allocate Modal */}
       {allocateModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 50, padding: '1rem' }}>
@@ -309,8 +618,15 @@ const totalAllocated = safeGoals.reduce((sum, g) => sum + (g.currentAmount || 0)
             </div>
 
             <div style={{ background: 'var(--bg-default)', borderRadius: '10px', padding: '1rem', marginBottom: '1rem' }}>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Goal: <strong style={{ color: 'var(--text-primary)' }}>{allocateModal.name}</strong></div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Saldo tersedia: <strong style={{ color: 'var(--accent-success)' }}>{formatIDR(unallocated)}</strong></div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                Goal: <strong style={{ color: 'var(--text-primary)' }}>{allocateModal.name}</strong>
+              </div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                Rekening: <strong style={{ color: 'var(--text-primary)' }}>{allocateModal.account || 'BSI'}{allocateModal.accountUser ? ` (${allocateModal.accountUser})` : ''}</strong>
+              </div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                Saldo bebas tersedia: <strong style={{ color: 'var(--accent-success)' }}>{formatIDR(modalUnallocated)}</strong>
+              </div>
             </div>
 
             <div className="form-group" style={{ marginBottom: '1rem' }}>
