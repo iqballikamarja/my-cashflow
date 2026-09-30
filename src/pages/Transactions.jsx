@@ -36,6 +36,7 @@ export default function Transactions() {
   const [allAccounts, setAllAccounts] = useState({ Iqbal: [], Zela: [] });
 
   const [allCategories, setAllCategories] = useState([]);
+  const [goals, setGoals] = useState([]);
 
   
 
@@ -112,6 +113,11 @@ export default function Transactions() {
 
 
   useEffect(() => {
+
+    fetch(`${API_URL}/api/goals`, { headers: { 'Authorization': 'Bearer ' + token } })
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setGoals(data); })
+      .catch(() => {});
 
     fetch(`${API_URL}/api/categories/all`, { headers: { 'Authorization': 'Bearer ' + token } })
 
@@ -247,6 +253,21 @@ export default function Transactions() {
   });
 
   const txOwner = editTx?.user || user.username;
+
+    const getGoalTag = (userName, accName) => {
+    if (!goals || goals.length === 0) return { hasGoal: false, label: '' };
+    const u = (userName || '').toLowerCase();
+    const a = (accName || '').toUpperCase();
+    const matched = goals.filter(g => {
+      const gAcc = (g.account || 'BSI').toUpperCase();
+      const gUser = (g.accountUser || '').toLowerCase();
+      if (gAcc !== a) return false;
+      if (gUser && gUser !== u) return false;
+      return true;
+    });
+    if (matched.length === 0) return { hasGoal: false, label: '' };
+    return { hasGoal: true, label: ` [${matched.map(g => g.name).join(', ')}]` };
+  };
 
   const myAccounts = Object.keys(allAccounts).length > 0 && allAccounts[txOwner] 
 
@@ -552,7 +573,14 @@ export default function Transactions() {
 
                   <option value="">-- Pilih Rekening --</option>
 
-                  {myAccounts.map(acc => (<option key={acc} value={acc}>{acc}</option>))}
+                  {myAccounts.map(acc => {
+                    const { hasGoal, label } = getGoalTag(txOwner, acc);
+                    return (
+                      <option key={acc} value={acc}>
+                        {hasGoal ? `🎯 ${acc}${label}` : acc}
+                      </option>
+                    );
+                  })}
 
                   {!myAccounts.includes(editForm.account) && editForm.account && <option value={editForm.account}>{editForm.account}</option>}
 
@@ -576,7 +604,16 @@ export default function Transactions() {
 
                     {otherUsersAccounts.map(acc => (
 
-                      <option key={acc} value={acc.split('-')[1]}>{acc.replace('-', ' - ')}</option>
+                      <option key={acc} value={acc.split('-')[1]}>
+                        {(() => {
+                          const [u, a] = acc.split('-');
+                          const initial = u.charAt(0).toUpperCase();
+                          const circleInitial = initial === "I" ? "Ⓘ" : initial === "Z" ? "Ⓩ" : `[${initial}]`;
+                          const formattedUser = `${circleInitial} ${u.charAt(0).toUpperCase() + u.slice(1).toLowerCase()}`;
+                          const { hasGoal, label } = getGoalTag(u, a);
+                          return `${formattedUser} - ${hasGoal ? `🎯 ${a}${label}` : a}`;
+                        })()}
+                      </option>
 
                     ))}
 
